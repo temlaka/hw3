@@ -1,0 +1,10 @@
+version: "2"
+linters:
+  enable:
+    - govet        # go vet
+    - errcheck     # пропущенные проверки err
+    - staticcheck  # ошибки и упрощения
+  settings:
+    govet:
+      enable:
+        - shadow   # включить затенение

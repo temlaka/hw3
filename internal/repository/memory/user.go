@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	"hw3/internal/domain"
 	"sync"
 )
@@ -21,7 +22,7 @@ func (u *UserRepo) Create(user domain.User) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	if _, ok := u.storage[user.Username]; ok {
-		return domain.ErrUserExists
+		return fmt.Errorf("create %s: %w", user.Username, domain.ErrUserExists)
 	}
 	u.storage[user.Username] = user
 	return nil
@@ -33,7 +34,7 @@ func (u *UserRepo) GetByUsername(username string) (domain.User, error) {
 	defer u.mu.RUnlock()
 	user, ok := u.storage[username]
 	if !ok {
-		return domain.User{}, domain.ErrUserNotFound
+		return domain.User{}, fmt.Errorf("get %s: %w", username, domain.ErrUserNotFound)
 	}
 	return user, nil
 
