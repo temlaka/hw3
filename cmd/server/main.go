@@ -23,26 +23,18 @@ func main() {
 		log.Fatal("api key is none")
 	}
 
-	mux := http.NewServeMux()
-	repo := memory.NewUserRepo()
-	authSvc := auth.NewService(repo, JWT_SECRET)
-	auth := handler.NewAuthHandler(authSvc)
-
-	cryptoRepo := memory.NewCryptoRepo(100)
 	cgAPI := coingecko.NewClient("https://api.coingecko.com/api/v3", COINGECKO_API_KEY)
-	cryptoSvc := crypto.NewService(cryptoRepo, cgAPI)
 
+	repo := memory.NewUserRepo()
+	cryptoRepo := memory.NewCryptoRepo(100)
+
+	authSvc := auth.NewService(repo, JWT_SECRET)
+	authHandler := handler.NewAuthHandler(authSvc)
+
+	cryptoSvc := crypto.NewService(cryptoRepo, cgAPI)
 	cryptoHandler := handler.NewCryptoHandler(cryptoSvc)
 
-	mux.HandleFunc("POST /auth/register", auth.Register)
-	mux.HandleFunc("POST /auth/login", auth.Login)
-	mux.HandleFunc("GET /crypto", cryptoHandler.GetCryptos)
-	mux.HandleFunc("POST /crypto", cryptoHandler.AddCrypto)
-	mux.HandleFunc("GET /crypto/{symbol}", cryptoHandler.GetCryptoInfo)
-	mux.HandleFunc("PUT /crypto/{symbol}/refresh", cryptoHandler.UpdateCryptoInfo)
-	mux.HandleFunc("GET /crypto/{symbol}/history", cryptoHandler.GetCryptoHistory)
-	mux.HandleFunc("GET /crypto/{symbol}/stats", cryptoHandler.GetStatsCrypto)
-	mux.HandleFunc("DELETE /crypto/{symbol}", cryptoHandler.DeleteCrypto)
+	mux := handler.Routes(authHandler, cryptoHandler, JWT_SECRET)
 
 	port := ":8080"
 	server := &http.Server{

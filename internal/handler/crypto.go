@@ -129,7 +129,6 @@ func (h *CryptoHandler) UpdateCryptoInfo(w http.ResponseWriter, r *http.Request)
 	symbol := r.PathValue("symbol")
 	updatedCrypto, err := h.svc.UpdateCrypto(symbol)
 	switch {
-	// ErrUnknownSymbol: монету, которой нет в CoinGecko, нельзя и отслеживать → тоже 404
 	case errors.Is(err, domain.ErrCryptoNotFound), errors.Is(err, domain.ErrUnknownSymbol):
 		writeError(w, "crypto not found", http.StatusNotFound)
 		return
