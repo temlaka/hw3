@@ -83,6 +83,24 @@ func (cr *CryptoRepo) History(symbol string) ([]domain.PricePoint, error) {
 	copy(res, historySlice)
 	return res, nil
 }
+func (cr *CryptoRepo) GetWithHistory(symbol string) (domain.Crypto, []domain.PricePoint, error) {
+
+	cr.mu.RLock()
+	defer cr.mu.RUnlock()
+	getCrypto, ok := cr.cryptos[symbol]
+	if !ok {
+		return domain.Crypto{}, nil, fmt.Errorf("get with history %s: %w", symbol, domain.ErrCryptoNotFound)
+	}
+
+	historySlice, exist := cr.history[symbol]
+	if !exist {
+		return domain.Crypto{}, nil, fmt.Errorf("get with history %s: %w", symbol, domain.ErrCryptoNotFound)
+	}
+	getHistory := make([]domain.PricePoint, len(historySlice))
+	copy(getHistory, historySlice)
+
+	return getCrypto, getHistory, nil
+}
 
 func (cr *CryptoRepo) Delete(symbol string) error {
 	cr.mu.Lock()

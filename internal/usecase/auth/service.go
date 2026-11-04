@@ -27,7 +27,11 @@ func (s *Service) Register(username string, password string) (string, error) {
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
+	if errors.Is(err, bcrypt.ErrPasswordTooLong) {
+
+		return "", fmt.Errorf("password too long: %w", domain.ErrInvalidInput)
+
+	} else if err != nil {
 		return "", fmt.Errorf("hash password: %w", err)
 
 	}

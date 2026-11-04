@@ -1,6 +1,8 @@
 package crypto
 
 import (
+	"errors"
+	"fmt"
 	"hw3/internal/domain"
 	"slices"
 	"strings"
@@ -29,6 +31,12 @@ func (s *Service) GetListCrypto() ([]domain.Crypto, error) {
 
 func (s *Service) AddCrypto(symbol string) (domain.Crypto, error) {
 	symbol = strings.ToUpper(symbol)
+	_, err := s.repo.Get(symbol)
+	if err == nil {
+		return domain.Crypto{}, fmt.Errorf("add crypto %s: %w", symbol, domain.ErrCryptoExists)
+	} else if !errors.Is(err, domain.ErrCryptoNotFound) {
+		return domain.Crypto{}, err
+	}
 	name, price, err := s.cg.GetPrice(symbol)
 	if err != nil {
 		return domain.Crypto{}, err
@@ -57,6 +65,10 @@ func (s *Service) GetInfoCrypto(symbol string) (domain.Crypto, error) {
 
 func (s *Service) UpdateCrypto(symbol string) (domain.Crypto, error) {
 	symbol = strings.ToUpper(symbol)
+	_, err := s.repo.Get(symbol)
+	if err != nil {
+		return domain.Crypto{}, err
+	}
 	_, price, err := s.cg.GetPrice(symbol)
 	if err != nil {
 		return domain.Crypto{}, err
@@ -90,17 +102,13 @@ func (s *Service) GetHistory(symbol string) ([]domain.PricePoint, error) {
 
 func (s *Service) GetStats(symbol string) (currentPrice float64, stats domain.Stats, err error) {
 	symbol = strings.ToUpper(symbol)
-	crypto, err := s.GetInfoCrypto(symbol)
+	crypto, list, err := s.repo.GetWithHistory(symbol)
 
 	if err != nil {
 		return 0, domain.Stats{}, err
 	}
 	currentPrice = crypto.CurrentPrice
-	list, err := s.GetHistory(symbol)
 
-	if err != nil {
-		return 0, domain.Stats{}, err
-	}
 	newStats := domain.Stats{}
 	if len(list) == 0 {
 		return currentPrice, domain.Stats{}, nil
@@ -117,10 +125,11 @@ func (s *Service) GetStats(symbol string) (currentPrice float64, stats domain.St
 	newStats.AvgPrice = sum / float64(len(list))
 	newStats.RecordsCount = len(list)
 
+	newStats.PriceChange = list[len(list)-1].Price - list[0].Price
+
 	if list[0].Price == 0 {
 		return currentPrice, newStats, nil
 	}
-	newStats.PriceChange = list[len(list)-1].Price - list[0].Price
 	newStats.PriceChangePercent = newStats.PriceChange / list[0].Price * 100
 	return currentPrice, newStats, nil
 }

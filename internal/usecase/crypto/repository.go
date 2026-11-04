@@ -9,4 +9,5 @@ type CryptoRepository interface {
 	UpdatePrice(symbol string, p domain.PricePoint) error
 	History(symbol string) ([]domain.PricePoint, error)
 	Delete(symbol string) error
+	GetWithHistory(symbol string) (domain.Crypto, []domain.PricePoint, error)
 }

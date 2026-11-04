@@ -39,7 +39,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	t, err := h.svc.Register(req.Username, req.Password)
 	switch {
 	case errors.Is(err, domain.ErrInvalidInput):
-		writeError(w, "username and password are required", http.StatusBadRequest)
+		writeError(w, "invalid username or password format", http.StatusBadRequest)
 		return
 	case errors.Is(err, domain.ErrUserExists):
 		writeError(w, "user already exists", http.StatusConflict)
